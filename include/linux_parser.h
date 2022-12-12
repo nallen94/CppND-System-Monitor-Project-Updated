@@ -1,9 +1,12 @@
 #ifndef SYSTEM_PARSER_H
 #define SYSTEM_PARSER_H
 
+#define MB2KB 1024
+
 #include <fstream>
 #include <regex>
 #include <string>
+#include <iostream>
 
 namespace LinuxParser {
 // Paths
