@@ -43,7 +43,6 @@ string LinuxParser::Kernel() {
     std::getline(stream, line);
     std::istringstream linestream(line);
     linestream >> os >> version >> kernel;
-    std::cout<<kernel;
   }
   return kernel;
 }
@@ -75,9 +74,9 @@ float LinuxParser::MemoryUtilization() {
   string key;
   float value{0.0};
 
-  float MemTotal, MemFree, Buffers, Cached{0.0};
+  float MemTotal, MemFree, Buffers, Cached, SReclaimable, Shmem {0.0};
   std::ifstream filestream(kProcDirectory + kMeminfoFilename);
-  if (filestream.is_open())
+  if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
       std::replace(line.begin(), line.end(), ':', ' ');
       std::istringstream linestream(line);
@@ -90,9 +89,15 @@ float LinuxParser::MemoryUtilization() {
           Buffers = value;
         else if (key == "Cached")
           Cached = value;
+        else if (key == "SReclaimable")
+          SReclaimable = value;
+        else if (key == "Shmem")
+          Shmem = value;
       }
     }
-  value = (MemTotal - MemFree - Buffers - Cached) / 1024;
+  }
+  Cached=Cached+ SReclaimable- Shmem;
+  value = (MemTotal - MemFree - Buffers - Cached)/MemTotal;
   return value;
 }
 
@@ -101,14 +106,14 @@ long LinuxParser::UpTime() {
   string line;
   float uptime_system, uptime_idle;
   long value;
-  
+
   std::ifstream stream(kProcDirectory + kUptimeFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    linestream >> uptime_system >>uptime_idle;
+    linestream >> uptime_system >> uptime_idle;
   }
-  value=uptime_system+uptime_idle;
+  value = uptime_system + uptime_idle;
   return value;
 }
 
@@ -129,10 +134,44 @@ long LinuxParser::IdleJiffies() { return 0; }
 vector<string> LinuxParser::CpuUtilization() { return {}; }
 
 // TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
+int LinuxParser::TotalProcesses() {
+  string line;
+  string key;
+  int value{0};
+  int processes;
+  std::ifstream filestream(kProcDirectory + kStatFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == "processes") {
+          processes = value;
+        }
+      }
+    }
+  }
+  return processes;
+}
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::RunningProcesses() {
+  string line;
+  string key;
+  int value{0};
+  int processes_running;
+  std::ifstream filestream(kProcDirectory + kStatFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == "procs_running") {
+          processes_running = value;
+        }
+      }
+    }
+  }
+  return processes_running;
+}
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
