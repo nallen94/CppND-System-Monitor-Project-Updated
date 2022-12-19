@@ -1,13 +1,12 @@
 #ifndef SYSTEM_PARSER_H
 #define SYSTEM_PARSER_H
 
-#define MB2KB 1024
-
 #include <fstream>
 #include <regex>
 #include <string>
 #include <iostream>
-
+#include <filesystem>
+#include <cmath>
 namespace LinuxParser {
 // Paths
 const std::string kProcDirectory{"/proc/"};
@@ -50,6 +49,7 @@ long ActiveJiffies(int pid);
 long IdleJiffies();
 
 // Processes
+std::vector<float> CpuUtilization(int pid);
 std::string Command(int pid);
 std::string Ram(int pid);
 std::string Uid(int pid);
