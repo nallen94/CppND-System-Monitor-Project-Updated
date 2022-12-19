@@ -10,10 +10,10 @@ class Processor {
   // TODO: Declare any necessary private members
  private:
 
- float prev_idle=0;
- float prev_total=0;
+ float prev_idletime=0;
+ float prev_totaltime=0;
 
- std::vector<long> string_to_long(std::vector<std::string>);
+ std::vector<long> string2long(std::vector<std::string>);
 
 };
 

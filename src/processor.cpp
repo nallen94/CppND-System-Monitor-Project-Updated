@@ -1,34 +1,36 @@
 #include "processor.h"
 
-// https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
-// TODO: Return the aggregate CPU utilization
 float Processor::Utilization() {
-  std::vector<long> usages = string_to_long(LinuxParser::CpuUtilization());
+  std::vector<long> usages = string2long(LinuxParser::CpuUtilization());
 
-  float totaltime = usages[LinuxParser::CPUStates::kUser_] +
-                    usages[LinuxParser::CPUStates::kNice_] +
-                    usages[LinuxParser::CPUStates::kSystem_] +
-                    usages[LinuxParser::CPUStates::kIdle_] +
-                    usages[LinuxParser::CPUStates::kIOwait_] +
-                    usages[LinuxParser::CPUStates::kIRQ_] +
-                    usages[LinuxParser::CPUStates::kSoftIRQ_] +
-                    usages[LinuxParser::CPUStates::kSteal_];
-
+  // https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
+  // Used the above link for reference to calculcate the TIMES of processor
   float idletime = usages[LinuxParser::CPUStates::kIdle_] +
                    usages[LinuxParser::CPUStates::kIOwait_];
+ 
+  float nonidletime = usages[LinuxParser::CPUStates::kUser_] +
+                      usages[LinuxParser::CPUStates::kNice_] +
+                      usages[LinuxParser::CPUStates::kSystem_] +
+                      usages[LinuxParser::CPUStates::kIRQ_] +
+                      usages[LinuxParser::CPUStates::kSoftIRQ_] +
+                      usages[LinuxParser::CPUStates::kSteal_];
 
-  float diff_idle = idletime - prev_idle;
-  float diff_total = totaltime - prev_total;
-  float cpu_usage = (diff_total - diff_idle) / diff_total;
+  float totaltime = nonidletime + idletime;
 
-  prev_idle = idletime;
-  prev_total = totaltime;
+  float totald = totaltime - prev_totaltime;
+  float idled = idletime - prev_idletime;
+  float CPU_Percentage = (totald - idled) / totald;
 
-  return cpu_usage;
+  prev_totaltime = totaltime;
+  prev_idletime = idletime;
+
+  return CPU_Percentage;
 }
 
-std::vector<long> Processor::string_to_long(std::vector<std::string> string_val) \
-{
+
+//to convert the vector of strings to long data type
+std::vector<long> Processor::string2long(
+  std::vector<std::string> string_val) {
   std::vector<long> cpu_usages;
   for (auto i : string_val) cpu_usages.push_back(std::stol(i));
 
